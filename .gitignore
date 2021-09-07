@@ -173,3 +173,6 @@ docs/
 
 # Test files
 test.*
+
+# Kamiak output files
+*/kamiak_output/*
