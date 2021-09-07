@@ -165,7 +165,7 @@ docs/
 
 ##### My Ignores #####
 # Data files
-*/data/*
+**/data/
 
 # VSC workspace files
 .vscode/
@@ -175,4 +175,4 @@ docs/
 test.*
 
 # Kamiak output files
-*/kamiak_output/*
+**/kamiak_output/
