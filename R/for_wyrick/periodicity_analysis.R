@@ -21,8 +21,10 @@ getPeakPeriodicityAndSNR = function(counts, lombFrom, lombTo, plot = FALSE) {
 
 # Creates a scatter plot for minor-in, minor-out, and intermediate values, based on the given data and
 # rotational positions.  The data should have a "position" column and the relevant counts should be in the second column.
+# If an output file path is provided, writes the position data to that file.
 inVsOutPlotter = function(positionData, minorInPositions, minorOutPositions, plotIntermediate = TRUE,
-                          title = "", yAxisLabel = "Normalized Counts", xAxisLabel = "Rotational Position", ylim = NULL) {
+                          title = "", yAxisLabel = "Normalized Counts", xAxisLabel = "Rotational Position", ylim = NULL,
+                          positionDataOutputFilePath = NULL) {
   
   # Characterize each position based on the given positions.
   positionData = copy(positionData)
@@ -33,6 +35,9 @@ inVsOutPlotter = function(positionData, minorInPositions, minorOutPositions, plo
   
   # Remove intermediate positions if they're not being plotted.
   if (!plotIntermediate) positionData = positionData[Rotational_Pos != "Intermediate"]
+  
+  # Write the data if an output file path was given.
+  if (!is.null(positionDataOutputFilePath)) fwrite(positionData, positionDataOutputFilePath, sep = '\t')
   
   # Create the scatter plot!
   ggplot(positionData, aes_string("Rotational_Pos", paste0('`',colnames(positionData)[2],'`'), 
@@ -46,6 +51,28 @@ inVsOutPlotter = function(positionData, minorInPositions, minorOutPositions, plo
     coord_cartesian(ylim = ylim) +
     theme(plot.title = element_text(size = 20, hjust = 0.5), axis.title = element_text(size = 15),
           axis.text.y = element_text(size = 14))
+  
+}
+
+
+# Separates out minor-in, minor-out, and intermediate positions, 
+# and writes them and any data in column 2 to the given file path.
+# NOTE: Currently doesn't work as expected...
+separateRotationalPosData = function(positionData, minorInPositions, minorOutPositions, outputFilePath) {
+  
+  positionData = copy(positionData)
+  positionData = positionData[Position >= -73 & Position <= 73]
+  positionData[,Rotational_Pos := "Intermediate"]
+  positionData[Position %in% minorInPositions | Position %in% -minorInPositions, Rotational_Pos := "Minor_In"]
+  positionData[Position %in% minorOutPositions | Position %in% -minorOutPositions, Rotational_Pos := "Minor_Out"]
+  
+  minorInTable = data.table(Minor_In_Positions = positionData[Rotational_Pos == "Minor_In", Position],
+                            Minor_In_Data = positionData[Rotational_Pos == "Minor_In"][[2]])
+  minorOutTable = data.table(Minor_Out_Positions = positionData[Rotational_Pos == "Minor_Out", Position],
+                             Minor_Out_Data = positionData[Rotational_Pos == "Minor_Out"][[2]])
+  intermediateTable = data.table(Intermediate_Positions = positionData[Rotational_Pos == "Intermediate", Position],
+                                 Intermediate_Data = positionData[Rotational_Pos == "Intermediate"][[2]])
+  
   
 }
 
