@@ -4,23 +4,23 @@ from typing import List
 import os
 
 
-def pdbParser(pdfFilePaths: List[str]):
+def pdbParserBySplit(pdbFilePaths: List[str]):
     """
-    Given one or more pdb file paths, searches for merged columns and un-merges them.
+    Given one or more pdb file paths, splits on whitespace and searches for merged columns to un-merge.
     Outputs the data in tab-delimited format to a new file path.
     """
 
-    for pdfFilePath in pdfFilePaths:
+    for pdbFilePath in pdbFilePaths:
 
-        print("Working in", os.path.basename(pdfFilePath))
+        print("Parsing by splitting and un-merging in", os.path.basename(pdbFilePath))
 
         # Create a path for the output file by simpling appending the ".tsv" file extension
-        pdfOutputFilePath = pdfFilePath + ".tsv"
+        pdbOutputFilePath = pdbFilePath + ".tsv"
 
-        with open(pdfFilePath, 'r') as pdfFile:
-            with open(pdfOutputFilePath, 'w') as pdfOutputFile:
+        with open(pdbFilePath, 'r') as pdbFile:
+            with open(pdbOutputFilePath, 'w') as pdbOutputFile:
 
-                for line in pdfFile:
+                for line in pdbFile:
 
                     splitLine = line.split()
 
@@ -85,8 +85,46 @@ def pdbParser(pdfFilePaths: List[str]):
 
                     else: outputSplitLine = splitLine
 
-                    pdfOutputFile.write('\t'.join(outputSplitLine) + '\n')
+                    pdbOutputFile.write('\t'.join(outputSplitLine) + '\n')
 
+
+def pdbParserByIndex(pdbFilePaths: List[str]):
+    """
+    Given one or more pdb file paths, retrieve relevant columns based on character positions (indices).
+    Outputs the data in tab-delimited format to a new file path.
+    """
+
+    for pdbFilePath in pdbFilePaths:
+
+        print("Parsing by index in", os.path.basename(pdbFilePath))
+
+        # Create a path for the output file by simpling appending the ".tsv" file extension
+        pdbOutputFilePath = pdbFilePath + ".tsv"
+
+        with open(pdbFilePath, 'r') as pdbFile:
+            with open(pdbOutputFilePath, 'w') as pdbOutputFile:
+
+                # For every line in the file, parse out the relevant information by index.
+                for line in pdbFile:
+
+                    # Make sure we're looking at an ATOM line.
+                    if line[0:6].strip() != "ATOM": continue
+
+                    name = line[12:16].strip()
+                    residueName = line[17:20].strip()
+                    chainID = line[21].strip()
+                    resSeqNum = line[22:26].strip()
+                    xPos = line[30:38].strip()
+                    yPos = line[38:46].strip()
+                    zPos = line[46:54].strip()
+                    tempFactor = line[60:66].strip()
+
+                    # Wrapt the relevant data and make sure there are values for each one.
+                    relevantData = (name, residueName, chainID, resSeqNum, xPos, yPos, zPos, tempFactor)
+                    for data in relevantData: assert data, "Data point missing: " + '\n\t' + str(relevantData) + '\n\t' + line
+
+                    # Write the new line with the relevant information.
+                    pdbOutputFile.write('\t'.join(relevantData) + '\n')
 
 
 def main():
@@ -94,6 +132,7 @@ def main():
     #Create the Tkinter UI
     dialog = TkinterDialog(workingDirectory=os.path.dirname(__file__))
     dialog.createMultipleFileSelector("pdb Files:", 0, ".pdb", ("pdb Files", ".pdb"))
+    dialog.createDropdown("Parse Method", 1, 0, ("By Split", "By Index"))
 
     # Run the UI
     dialog.mainloop()
@@ -101,6 +140,9 @@ def main():
     # If no input was received (i.e. the UI was terminated prematurely), then quit!
     if dialog.selections is None: quit()
 
-    pdbParser(dialog.selections.getFilePathGroups()[0])
+    if dialog.selections.getDropdownSelections()[0] == "By Split":
+        pdbParserBySplit(dialog.selections.getFilePathGroups()[0])
+    elif dialog.selections.getDropdownSelections()[0] == "By Index":
+        pdbParserByIndex(dialog.selections.getFilePathGroups()[0])
 
 if __name__ == "__main__": main()
