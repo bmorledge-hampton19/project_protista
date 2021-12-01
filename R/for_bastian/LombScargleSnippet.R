@@ -14,3 +14,13 @@ measurements = myData$V2
 # The "ofac" parameter will scan extra periodicities within the range you specified.  (I'm not exactly
 # sure how it decides how many extras to scan, tbh, but 100 always seems like a good value to use.)
 lombResult = lsp(measurements, times = times, from = 5, to = 25, type = "period", ofac = 100)
+
+# Get the peak periodicity and its associated power.
+peakPeriodicity = lombResult$peak.at[1]
+peakPeriodicityPower = lombResult$peak
+
+# Calculate SNR as the ratio of the peak periodicity power to the median of the powers of all other
+# periodicities not within 0.5 units of the peak periodicity
+noiseBooleanVector = (lombResult$scanned < relevantPeriodicity - 0.5
+                      | lombResult$scanned > relevantPeriodicity + 0.5)
+periodicitySNRs[i] = relevantPower / median(lombResult$power[noiseBooleanVector])
