@@ -21,6 +21,6 @@ peakPeriodicityPower = lombResult$peak
 
 # Calculate SNR as the ratio of the peak periodicity power to the median of the powers of all other
 # periodicities not within 0.5 units of the peak periodicity
-noiseBooleanVector = (lombResult$scanned < relevantPeriodicity - 0.5
-                      | lombResult$scanned > relevantPeriodicity + 0.5)
-periodicitySNRs[i] = relevantPower / median(lombResult$power[noiseBooleanVector])
+noiseBooleanVector = (lombResult$scanned < peakPeriodicity - 0.5 |
+                      lombResult$scanned > peakPeriodicity + 0.5)
+sNR = peakPeriodicityPower / median(lombResult$power[noiseBooleanVector])
