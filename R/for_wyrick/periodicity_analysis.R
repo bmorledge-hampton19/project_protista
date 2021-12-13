@@ -2,11 +2,7 @@ library(data.table)
 library(ggplot2)
 
 # A helper function for when I want to quickly get lomb results with SNR.
-getPeakPeriodicityAndSNR = function(counts, lombFrom, lombTo, plot = FALSE) {
-  
-  # Calculate the periodicity of the data using a Lomb-Scargle periodiagram.
-  lombResult = lomb::lsp(counts, type = "period", from = lombFrom, to = lombTo,
-                         ofac = 100, plot = plot)
+getPeakPeriodicityAndSNR = function(lombResult) {
   
   # Get the peak periodicity and its associated SNR
   peakPeriodicity = lombResult$peak.at[1]
@@ -20,7 +16,7 @@ getPeakPeriodicityAndSNR = function(counts, lombFrom, lombTo, plot = FALSE) {
 
 
 # Creates a scatter plot for minor-in, minor-out, and intermediate values, based on the given data and
-# rotational positions.  The data should have a "position" column and the relevant counts should be in the second column.
+# rotational positions.  The data should have a "Dyad_Position" column and the relevant counts should be in the second column.
 # If an output file path is provided, writes the position data to that file.
 inVsOutPlotter = function(positionData, minorInPositions, minorOutPositions, plotIntermediate = TRUE,
                           title = "", yAxisLabel = "Normalized Counts", xAxisLabel = "Rotational Position", ylim = NULL,
@@ -28,10 +24,10 @@ inVsOutPlotter = function(positionData, minorInPositions, minorOutPositions, plo
   
   # Characterize each position based on the given positions.
   positionData = copy(positionData)
-  positionData = positionData[Position >= -73 & Position <= 73]
+  positionData = positionData[Dyad_Position >= -73 & Dyad_Position <= 73]
   positionData[,Rotational_Pos := "Intermediate"]
-  positionData[Position %in% minorInPositions | Position %in% -minorInPositions, Rotational_Pos := "Minor_In"]
-  positionData[Position %in% minorOutPositions | Position %in% -minorOutPositions, Rotational_Pos := "Minor_Out"]
+  positionData[Dyad_Position %in% minorInPositions | Dyad_Position %in% -minorInPositions, Rotational_Pos := "Minor_In"]
+  positionData[Dyad_Position %in% minorOutPositions | Dyad_Position %in% -minorOutPositions, Rotational_Pos := "Minor_Out"]
   
   # Remove intermediate positions if they're not being plotted.
   if (!plotIntermediate) positionData = positionData[Rotational_Pos != "Intermediate"]
