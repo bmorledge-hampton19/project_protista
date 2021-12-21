@@ -2,7 +2,7 @@ library(data.table)
 library(ggplot2)
 
 # A helper function for when I want to quickly get lomb results with SNR.
-getPeakPeriodicityAndSNR = function(lombResult) {
+getPeakPeriodicityAndSNR = function(lombResult, formatForOutput = FALSE) {
   
   # Get the peak periodicity and its associated SNR
   peakPeriodicity = lombResult$peak.at[1]
@@ -10,7 +10,8 @@ getPeakPeriodicityAndSNR = function(lombResult) {
                         | lombResult$scanned > peakPeriodicity + 0.5)
   SNR = lombResult$peak / median(lombResult$power[noiseBooleanVector])
   
-  return(c(peakPeriodicity,SNR))
+  if (formatForOutput) return(paste0("Peak Periodicity: ",peakPeriodicity, "  SNR: ",SNR))
+  else return(c(peakPeriodicity,SNR))
   
 }
 
