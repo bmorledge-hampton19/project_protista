@@ -1,19 +1,27 @@
 # This script takes a bed file that is the result of the wig2bed operation and converts it to the bed format expected by mutperiod.
+import math, os
 from mutperiodpy.helper_scripts.UsefulFileSystemFunctions import DataTypeStr, getDataDirectory
-from mutperiodpy.Tkinter_scripts.TkinterDialog import TkinterDialog
+from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
 from typing import List
-import os
 
 
 def wigBedToCustomBed(wigBedFilePaths: List[str]):
 
     for wigBedFilePath in wigBedFilePaths:
 
-        print("Working in",os.path.basename(wigBedFilePath))
+        print("Converting",os.path.basename(wigBedFilePath),"to custom bed format.")
 
         customBedFilePath = wigBedFilePath.rsplit('.',1)[0] + '_'
         if customBedFilePath.endswith("from_wig_"): customBedFilePath = customBedFilePath.rsplit("from_wig_",1)[0]
         customBedFilePath += DataTypeStr.customInput + ".bed"
+
+        # The counts column may be a non-integer value.  Find out what the base (minimum) value is to
+        # divide all other values by.
+        minCount = math.inf
+        with open(wigBedFilePath, 'r') as wigBedFile:
+            for line in wigBedFile:
+                counts = float(line.split()[4])
+                if counts < minCount: minCount = counts
 
         # Read out of the first file and write to the second to convert to the custom bed file.
         with open(wigBedFilePath, 'r') as wigBedFile:
@@ -22,9 +30,14 @@ def wigBedToCustomBed(wigBedFilePaths: List[str]):
                 for line in wigBedFile:
 
                     chromosome, startPos, endPos, _, counts = line.split()
-                    # Add the line "counts" number of times.
-                    counts = int(float(counts))
-                    for _ in range(counts):
+
+                    # Add the line "counts" number of times, taking into account the "base" value
+                    # and ensuring that the resulting value is actually a whole number (or close to it). 
+                    adjustedCounts = float(counts)/minCount
+                    if abs(adjustedCounts - round(adjustedCounts)) > 0.05:
+                        raise ValueError(f"Counts value {counts} is not a derivative of base counts value {minCount}.")
+
+                    for _ in range(round(adjustedCounts)):
                         customBedFile.write('\t'.join((chromosome, startPos, endPos, '.', "OTHER", '.')) + '\n')
 
 
