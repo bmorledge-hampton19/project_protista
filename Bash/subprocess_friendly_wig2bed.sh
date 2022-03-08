@@ -1,4 +1,3 @@
-#!/bin/sh
 # This script encapsulates the call to wig2bed so that
 # the Python subprocess module can be used without redirects.
 # 
