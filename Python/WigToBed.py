@@ -2,20 +2,31 @@
 # http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/
 import subprocess, os
 from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
+from benbiohelpers.FileSystemHandling.DirectoryHandling import checkDirs
 from typing import List
 friendlyWig2BedPath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                    "Bash","subprocess_friendly_wig2bed.sh")
 
-def wigToBed(inputFilePaths: List[str]):
+
+def wigToBed(inputFilePaths: List[str], outputToIntermediateDirectory = False):
 
     outputFilePaths = list()
 
     for inputFilePath in inputFilePaths:
         print("Converting",os.path.basename(inputFilePath),"from wig to bed.")
 
-        outputFilePath = inputFilePath.rsplit('.',1)[0] + ".bed"
+        # Create the output file path, making sure the outputToIntermediateDirectory parameter is satisfied.
+        outputFileName = os.path.basename(inputFilePath.rsplit('.',1)[0] + ".bed")
+        if outputToIntermediateDirectory and not os.path.dirname(inputFilePath).endswith("intermediate_files"):
+            checkDirs(os.path.join(os.path.dirname(inputFilePath), "intermediate_files"))
+            outputFilePath = os.path.join(os.path.dirname(inputFilePath), "intermediate_files", outputFileName)
+        elif outputToIntermediateDirectory or not os.path.dirname(inputFilePath).endswith("intermediate_files"):
+            outputFilePath = os.path.join(os.path.dirname(inputFilePath), outputFileName)
+        else:
+            outputFilePath = os.path.join(os.path.dirname(os.path.dirname(inputFilePath)), outputFileName)
         outputFilePaths.append(outputFilePath)
-        subprocess.check_call((friendlyWig2BedPath, inputFilePath, outputFilePath))
+
+        subprocess.check_call(("sh", friendlyWig2BedPath, inputFilePath, outputFilePath))
 
     return outputFilePaths
 

@@ -2,10 +2,13 @@
 import math, os
 from mutperiodpy.helper_scripts.UsefulFileSystemFunctions import DataTypeStr, getDataDirectory
 from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
+from benbiohelpers.FileSystemHandling.DirectoryHandling import checkDirs
 from typing import List
 
 
-def wigBedToCustomBed(wigBedFilePaths: List[str]):
+def wigBedToCustomBed(wigBedFilePaths: List[str], outputToIntermediateDirectory = False, strandDesignation = '.'):
+
+    customBedFilePaths = list()
 
     for wigBedFilePath in wigBedFilePaths:
 
@@ -14,6 +17,20 @@ def wigBedToCustomBed(wigBedFilePaths: List[str]):
         customBedFilePath = wigBedFilePath.rsplit('.',1)[0] + '_'
         if customBedFilePath.endswith("from_wig_"): customBedFilePath = customBedFilePath.rsplit("from_wig_",1)[0]
         customBedFilePath += DataTypeStr.customInput + ".bed"
+
+        # Create the output file path, making sure the outputToIntermediateDirectory parameter is satisfied.
+        customBedFileName = os.path.basename(wigBedFilePath.rsplit('.',1)[0] + '_')
+        if customBedFileName.endswith("from_wig_"): customBedFileName = customBedFileName.rsplit("from_wig_",1)[0]
+        customBedFileName += DataTypeStr.customInput + ".bed"
+
+        if outputToIntermediateDirectory and not os.path.dirname(wigBedFilePath).endswith("intermediate_files"):
+            checkDirs(os.path.join(os.path.dirname(wigBedFilePath), "intermediate_files"))
+            customBedFilePath = os.path.join(os.path.dirname(wigBedFilePath), "intermediate_files", customBedFileName)
+        elif outputToIntermediateDirectory or not os.path.dirname(wigBedFilePath).endswith("intermediate_files"):
+            customBedFilePath = os.path.join(os.path.dirname(wigBedFilePath), customBedFileName)
+        else:
+            customBedFilePath = os.path.join(os.path.dirname(os.path.dirname(wigBedFilePath)), customBedFileName)
+        customBedFilePaths.append(customBedFilePath)
 
         # The counts column may be a non-integer value.  Find out what the base (minimum) value is to
         # divide all other values by.
@@ -38,7 +55,10 @@ def wigBedToCustomBed(wigBedFilePaths: List[str]):
                         raise ValueError(f"Counts value {counts} is not a derivative of base counts value {minCount}.")
 
                     for _ in range(round(adjustedCounts)):
-                        customBedFile.write('\t'.join((chromosome, startPos, endPos, '.', "OTHER", '.')) + '\n')
+                        customBedFile.write('\t'.join((chromosome, startPos, endPos, '.', 
+                                                       "OTHER", strandDesignation)) + '\n')
+
+    return customBedFilePaths
 
 
 def main():
