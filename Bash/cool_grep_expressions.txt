@@ -1,4 +1,4 @@
-# Gets lines with a "-3" string anywhere and a trailing "TGG" sequence.
+# Gets lines with a "-3" string anywhere and a trailing "TGG" sequence. (Note the .* used as a wildcard, NOT *)
 grep '\-3.*TGG$'
 
 # Use a tab literal (ctrl+v tab) to search for an entry in a bed file.
