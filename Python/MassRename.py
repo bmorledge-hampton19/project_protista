@@ -8,7 +8,7 @@ from mutperiodpy.helper_scripts.UsefulFileSystemFunctions import getDataDirector
 
 
 def massRename(parentDirectory, searchString: str, replaceString: str, verbose = False):
-    
+
     assert searchString and replaceString, "Search and replace strings cannot be empty."
 
     # Iterate through the given directory
@@ -27,7 +27,7 @@ def massRename(parentDirectory, searchString: str, replaceString: str, verbose =
             newItem = item.replace(searchString, replaceString)
             if verbose: print(f"Replacing with new name: {newItem}")
 
-           
+
             try:
                 # If all that's changing is case, we need to do an intermediate renaming (IDK, it just works this way).
                 if searchString.lower() == replaceString.lower():

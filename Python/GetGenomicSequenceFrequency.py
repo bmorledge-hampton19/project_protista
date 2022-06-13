@@ -8,7 +8,7 @@ from benbiohelpers.CustomErrors import UserInputError
 
 
 def getGenomicSequenceFrequency(genomeFastaFilePath, sequences: List[str]):
-    
+
     # Do we have multiple sequences?
     if len(sequences) == 0: raise UserInputError("No sequences given.")
 
@@ -47,7 +47,7 @@ def getGenomicSequenceFrequency(genomeFastaFilePath, sequences: List[str]):
 
 
 def main():
-    
+
     # Get the working directory from mutperiod if possible. Otherwise, just use this script's directory.
     try:
         from mutperiodpy.helper_scripts.UsefulFileSystemFunctions import getDataDirectory
