@@ -1,0 +1,2 @@
+# Gets the unique lines from the first column, sorted.
+awk '{print $1}' input_file | sort | uniq
