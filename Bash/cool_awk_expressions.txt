@@ -1,2 +1,5 @@
 # Gets the unique lines from the first column, sorted.
 awk '{print $1}' input_file | sort | uniq
+
+# Filters lines based on specific fields, then prints those fields.
+awk '$3 == "DEL/ITX" && $4 > 2 {print $3" "$4}' input_file
