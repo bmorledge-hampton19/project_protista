@@ -1,0 +1,35 @@
+---
+title: "9.14.22 periodicity data"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(mutperiodR)
+bioinformaticsDirectory = choose.dir(caption = "Select Bioinformatics_Projects Directory")
+dataDir = file.path(bioinformaticsDirectory, "project_protista", "R", "data", "9.14.22_wyrick")
+
+fig3AData = fread(file.path(dataDir, "fig_3A.tsv"))
+fig3DData = fread(file.path(dataDir, "fig_3D.tsv"))
+figS5RotationalData = fread(file.path(dataDir, "fig_S5_rot.tsv"))
+figS5TranslationalData = fread(file.path(dataDir, "fig_S5_trans.tsv"))
+```
+
+
+```{r}
+getPeakPeriodicityAndSNR(fig3AData$Mystery_Value, 5, 25)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(fig3DData$Mystery_Value, 50, 250)
+```
+
+
+```{r}
+getPeakPeriodicityAndSNR(figS5RotationalData$Mystery_Value, 5, 25)
+```
+
+
+```{r}
+getPeakPeriodicityAndSNR(figS5TranslationalData$Mystery_Value, 50, 250)
+```
