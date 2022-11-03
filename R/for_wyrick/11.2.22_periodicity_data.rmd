@@ -1,0 +1,49 @@
+---
+title: "11.2.22 periodicity data"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(mutperiodR)
+bioinformaticsDirectory = choose.dir(caption = "Select Bioinformatics_Projects Directory")
+dataDir = file.path(bioinformaticsDirectory, "project_protista", "R", "data", "11.2.22_wyrick")
+
+rad1TSvsNTSMNaseData = fread(file.path(dataDir, "rad1_TS_vs_NTS_mnase.tsv"))
+rad1vsWTMNaseData = fread(file.path(dataDir, "rad1_vs_WT_MNase.tsv"))
+```
+
+
+```{r}
+getPeakPeriodicityAndSNR(rad1TSvsNTSMNaseData$TS_0min, 50, 250)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rad1TSvsNTSMNaseData$TS_60min, 50, 250)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rad1TSvsNTSMNaseData$NTS_0min, 50, 250)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rad1TSvsNTSMNaseData$NTS_60min, 50, 250)
+```
+
+
+```{r}
+getPeakPeriodicityAndSNR(rad1vsWTMNaseData$rad1_0min, 50, 250, plot = TRUE)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rad1vsWTMNaseData$rad1_60min, 50, 250, plot = TRUE)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rad1vsWTMNaseData$WT_0min, 50, 250)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rad1vsWTMNaseData$WT_60min, 50, 250)
+```
+
