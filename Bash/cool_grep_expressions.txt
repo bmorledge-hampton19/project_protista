@@ -12,3 +12,6 @@ grep -A 1 'SRR3062595\.2590\.1'
 
 # Get lines that don't have the given pattern
 grep -v 'MyPattern'
+
+# Get pattern at beginning of line (Use '^' at the beginning) (For end of line, use '$' at the end of the grep expression)
+grep ^chr11
