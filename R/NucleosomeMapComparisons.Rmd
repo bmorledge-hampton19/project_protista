@@ -1,0 +1,26 @@
+---
+title: "11.2.22 periodicity data"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(mutperiodR)
+bioinformaticsDirectory = choose.dir(caption = "Select Bioinformatics_Projects Directory")
+dataDir = file.path(bioinformaticsDirectory, "mutperiod", "mutperiod_data", "__external_data", "hg19")
+
+iNPSMapPath = file.path(dataDir, "hg19_NHF1_MNase_iNPS_chr11_nuc_map",
+  "hg19_NHF1_MNase_iNPS_chr11_nuc_map_nuc-group_self_raw_nucleosome_mutation_counts.tsv")
+BBGMapPath = file.path(dataDir, "hg19_NHF1_MNase_BBG_chr11_nuc_map",
+  "hg19_NHF1_MNase_BBG_chr11_nuc_map_nuc-group_self_raw_nucleosome_mutation_counts.tsv")
+```
+
+
+```{r}
+getNRL(iNPSMap)
+```
+
+```{r}
+getNRL(BBGMap)
+```
+
