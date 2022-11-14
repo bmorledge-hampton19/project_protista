@@ -7,20 +7,17 @@ from typing import List
 from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
 from benbiohelpers.FileSystemHandling.DirectoryHandling import checkDirs
 
+FIXED_STEP_WIG = "Fixed-step wig"
+WIG_LIKE_BED = "Wig-like bed"
+
 # Given a list of bed files with paired entries, convert each to a fixed step wig file containing
 # counts for nucleosome midpoints. Note that this requires a chrom.sizes file as well.
-# Returns a list of the generated nucleosome mids wig file paths.
-def bedMNasePEToWigNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath):
+# Output format can be either fixed-step wig or a wig-like bed, containing bed entries with counts in
+# the fourth (index 3) column
+# Returns a list of the generated nucleosome file paths.
+def bedMNasePEToWigNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outputFormat):
 
-    wigNucleosomeMidsFilePaths = list()
-
-    # Parse the chrom.sizes file into a dictionary.
-    print("Parsing chrom.sizes file...")
-    chromSizes = dict()
-    with open(chromSizesFilePath, 'r') as chromSizesFile:
-        for line in chromSizesFile:
-            chromosome, size = line.strip().split('\t')
-            chromSizes[chromosome] = int(size)
+    nucleosomeMidsOutputFilePaths = list()
 
     for bedFilePath in bedFilePaths:
 
@@ -32,6 +29,7 @@ def bedMNasePEToWigNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath):
         basename = os.path.basename(bedFilePath).rsplit('.',1)[0]
         bedNucleosomeMidsFilePath = os.path.join(tempDir, basename+"_nucleosome_mids.bed")
         wigNucleosomeMidsFilePath = os.path.join(os.path.dirname(bedFilePath), basename+"_nucleosome_mids.wig")
+        wigLikeNucleosomeMidsFilePath = os.path.join(os.path.dirname(bedFilePath), basename+"_wig-like_nucleosome_mids.bed")
 
         
         # Get the nucleosome mid points (estimated) from the paired end reads.
@@ -55,52 +53,88 @@ def bedMNasePEToWigNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath):
         print("Sorting midpoints...")
         subprocess.check_call(("sort","-k1,1","-k2,2n", "-k3,3n", "-s", "-o", bedNucleosomeMidsFilePath, bedNucleosomeMidsFilePath))
 
-        # Convert the file to a fixed step (1) wig file using the chrom.sizes dictionary.
-        print("Converting to fixed step wig file...")
-        with open(bedNucleosomeMidsFilePath, 'r') as bedNucleosomeMidsFile:
-            with open(wigNucleosomeMidsFilePath, 'w') as wigNucleosomeMidsFile:
+        # If "Fixed-step wig" output was selected, convert the file to a fixed step (1) wig file using the chrom.sizes dictionary.
+        if outputFormat == FIXED_STEP_WIG:
 
-                currentChrom = None
-                for line in bedNucleosomeMidsFile:
-                    splitLine = line.strip().split('\t')
+            print("Parsing chrom.sizes file...")
+            chromSizes = dict()
+            with open(chromSizesFilePath, 'r') as chromSizesFile:
+                for line in chromSizesFile:
+                    chromosome, size = line.strip().split('\t')
+                    chromSizes[chromosome] = int(size)
 
-                    # Check for a new (or the first) chromsoome.
-                    if currentChrom is None or splitLine[0] != currentChrom:
-                        # Make sure to finish the last chromosome.
-                        if currentChrom is not None:
-                            wigNucleosomeMidsFile.write(str(currentCount) + '\n')
-                            currentPos += 1
-                            while currentPos <= maxPos:
-                                wigNucleosomeMidsFile.write("0\n")
+            print("Converting to fixed step wig file...")
+            with open(bedNucleosomeMidsFilePath, 'r') as bedNucleosomeMidsFile:
+                with open(wigNucleosomeMidsFilePath, 'w') as wigNucleosomeMidsFile:
+
+                    currentChrom = None
+                    for line in bedNucleosomeMidsFile:
+                        splitLine = line.strip().split('\t')
+
+                        # Check for a new (or the first) chromsoome.
+                        if currentChrom is None or splitLine[0] != currentChrom:
+                            # Make sure to finish the last chromosome.
+                            if currentChrom is not None:
+                                wigNucleosomeMidsFile.write(str(currentCount) + '\n')
                                 currentPos += 1
+                                while currentPos <= maxPos:
+                                    wigNucleosomeMidsFile.write("0\n")
+                                    currentPos += 1
 
-                        currentChrom = splitLine[0]
-                        print(f"Creating fixed step entry for {currentChrom}")
-                        maxPos = chromSizes[currentChrom]
-                        currentPos = 1
-                        currentCount = 0
-                        wigNucleosomeMidsFile.write(f"fixedStep chrom={splitLine[0]} start=1 step=1\n")
+                            currentChrom = splitLine[0]
+                            print(f"Creating fixed step entry for {currentChrom}")
+                            maxPos = chromSizes[currentChrom]
+                            currentPos = 1
+                            currentCount = 0
+                            wigNucleosomeMidsFile.write(f"fixedStep chrom={splitLine[0]} start=1 step=1\n")
 
-                    # For each bed entry, see if we've reached it in the wig file. Once we have, increment current count.
-                    # Otherwise, step through the wig file until we reach the bed entry, writing counts as we go.
-                    bedEntryPos = int(splitLine[2])
-                    while bedEntryPos != currentPos:
+                        # For each bed entry, see if we've reached it in the wig file. Once we have, increment current count.
+                        # Otherwise, step through the wig file until we reach the bed entry, writing counts as we go.
+                        bedEntryPos = int(splitLine[2])
+                        while bedEntryPos > currentPos:
+                            wigNucleosomeMidsFile.write(str(currentCount) + '\n')
+                            currentCount = 0
+                            currentPos += 1
+                        assert bedEntryPos == currentPos, f"Bed entry: {splitLine}\nCurrent position: {currentPos}"
+                        currentCount += 1
+
+                    # Make sure to finish the current chromosome in the wig file after iterating through the bed file.
+                    if currentChrom is not None:
                         wigNucleosomeMidsFile.write(str(currentCount) + '\n')
-                        currentCount = 0
                         currentPos += 1
-                    currentCount += 1
-                
-                # Make sure to finish the current chromosome in the wig file after iterating through the bed file.
-                if currentChrom is not None:
-                    wigNucleosomeMidsFile.write(str(currentCount) + '\n')
-                    currentPos += 1
-                    while currentPos <= maxPos:
-                        wigNucleosomeMidsFile.write("0\n")
-                        currentPos += 1
+                        while currentPos <= maxPos:
+                            wigNucleosomeMidsFile.write("0\n")
+                            currentPos += 1
 
-        wigNucleosomeMidsFilePaths.append(wigNucleosomeMidsFilePath)
+            nucleosomeMidsOutputFilePaths.append(wigNucleosomeMidsFilePath)
 
-    return wigNucleosomeMidsFilePaths
+        # If "Wig-like bed" output was selected, count/merge bed entries to create the wig-like bed output.
+        elif outputFormat == WIG_LIKE_BED:
+
+            print("Converting to wig-like bed file...")
+            with open(bedNucleosomeMidsFilePath, 'r') as bedNucleosomeMidsFile:
+                with open(wigLikeNucleosomeMidsFilePath, 'w') as wigLikeNucleosomeMidsFile:
+
+                    lastEntry = None
+                    currentCount = 0
+                    for line in bedNucleosomeMidsFile:
+                        splitLine = line.strip().split('\t')
+
+                        # Compare this entry with the last. If it matches, just iterate the count.
+                        # If it doesn't, write the last Entry and its count and reset both.
+                        if lastEntry is not None and lastEntry[:2] == splitLine[:2]: currentCount += 1
+                        else:
+                            if lastEntry is not None: wigLikeNucleosomeMidsFile.write('\t'.join(lastEntry[:3] + [str(currentCount)]) + '\n')
+                            lastEntry = splitLine
+                            currentCount = 1
+                    
+                    # Make sure to finish the current entry after iterating through the bed file.
+                    if lastEntry is not None: wigLikeNucleosomeMidsFile.write('\t'.join(lastEntry[:3] + [str(currentCount)]) + '\n')
+                        
+            nucleosomeMidsOutputFilePaths.append(wigLikeNucleosomeMidsFilePath)
+
+
+    return nucleosomeMidsOutputFilePaths
 
 def main():
     
@@ -113,9 +147,16 @@ def main():
 
     with TkinterDialog(workingDirectory = workingDirectory) as dialog:
         dialog.createMultipleFileSelector("MNase PE Bed Files:", 0, ".bed", ("Bed Files", ".bed"))
-        dialog.createFileSelector("chrom.sizes File:", 1, ("chrom.sizes File", ".chrom.sizes"))
+        with dialog.createDynamicSelector(1, 0) as outputFormatDynSel:
+            outputFormatDynSel.initDropdownController("Output format:", (FIXED_STEP_WIG, WIG_LIKE_BED))
+            outputFormatDynSel.initDisplay(FIXED_STEP_WIG, FIXED_STEP_WIG).createFileSelector(
+                "chrom.sizes File:", 0, ("chrom.sizes File", ".chrom.sizes")
+            )
 
-    bedMNasePEToWigNucleosomeMids(dialog.selections.getFilePathGroups()[0], dialog.selections.getIndividualFilePaths()[0])
+    if outputFormatDynSel.getControllerVar() == WIG_LIKE_BED: chromSizesFilePath = None
+    else: chromSizesFilePath = dialog.selections.getIndividualFilePaths(FIXED_STEP_WIG)[0]
+    bedMNasePEToWigNucleosomeMids(dialog.selections.getFilePathGroups()[0],
+                                  chromSizesFilePath, outputFormatDynSel.getControllerVar())
 
 
 if __name__ == "__main__": main()
