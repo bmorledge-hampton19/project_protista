@@ -1,7 +1,8 @@
-# This script converts from paired-end MNase data in bed format to a format suitable for the BBG lab's nucleoosme
-# calling pipeline. This is accomplished by first converting the paired-end bed data to unpaired nucleosome
-# midpoints, which are assumed to be 73 bp 3' from the 5' end of each entry. Next, the resulting data is
-# sorted and converted to fixed-step wig format.
+# This script converts from paired-end MNase data in bed format to a format highlighting proposed dyad centers.
+# This is accomplished by first converting the paired-end bed data to unpaired nucleosome
+# midpoints, which are assumed to be 73 bp 3' from the 5' end of each entry.
+# Next, the resulting data is sorted and optionally converted to fixed-step wig, or a wig-like bed format. (for
+# use in the BBG pipeline)
 import os, subprocess
 from typing import List
 from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
@@ -15,7 +16,7 @@ WIG_LIKE_BED = "Wig-like bed"
 # Output format can be either fixed-step wig or a wig-like bed, containing bed entries with counts in
 # the fourth (index 3) column
 # Returns a list of the generated nucleosome file paths.
-def bedMNasePEToWigNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outputFormat):
+def bedMNasePEToNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outputFormat):
 
     nucleosomeMidsOutputFilePaths = list()
 
@@ -155,7 +156,7 @@ def main():
 
     if outputFormatDynSel.getControllerVar() == WIG_LIKE_BED: chromSizesFilePath = None
     else: chromSizesFilePath = dialog.selections.getIndividualFilePaths(FIXED_STEP_WIG)[0]
-    bedMNasePEToWigNucleosomeMids(dialog.selections.getFilePathGroups()[0],
+    bedMNasePEToNucleosomeMids(dialog.selections.getFilePathGroups()[0],
                                   chromSizesFilePath, outputFormatDynSel.getControllerVar())
 
 
