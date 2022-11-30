@@ -3,3 +3,10 @@ awk '{print $1}' input_file | sort | uniq
 
 # Filters lines based on specific fields, then prints those fields.
 awk '$3 == "DEL/ITX" && $4 > 2 {print $3" "$4}' input_file
+
+# Lots to unpack here:
+#   - Use of conditional statement to output to multiple files.
+#   - $0 prints the ENTIRE line.
+#   - Use of pipe to directly gzip output
+zcat mnase_mids_kernel_smoothing.chr1.tsv.gz | awk '{ if($3 < 123035435){print $0 | "gzip > mnase_mids_kernel_smoothing.chr1.1.tsv.gz"}\
+                                                      		           else{print $0 | "gzip > mnase_mids_kernel_smoothing.chr1.2.tsv.gz"} }'
