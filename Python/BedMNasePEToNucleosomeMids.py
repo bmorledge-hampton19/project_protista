@@ -8,6 +8,7 @@ from typing import List
 from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
 from benbiohelpers.FileSystemHandling.DirectoryHandling import checkDirs
 
+SIMPLE_BED = "Simple bed"
 FIXED_STEP_WIG = "Fixed-step wig"
 WIG_LIKE_BED = "Wig-like bed"
 
@@ -28,11 +29,13 @@ def bedMNasePEToNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outp
         tempDir = os.path.join(os.path.dirname(bedFilePath), ".tmp")
         checkDirs(tempDir)
         basename = os.path.basename(bedFilePath).rsplit('.',1)[0]
-        bedNucleosomeMidsFilePath = os.path.join(tempDir, basename+"_nucleosome_mids.bed")
+        if outputFormat == SIMPLE_BED:
+            bedNucleosomeMidsFilePath = os.path.join(os.path.dirname(bedFilePath), basename+"_nucleosome_mids.bed")
+        else:
+            bedNucleosomeMidsFilePath = os.path.join(tempDir, basename+"_nucleosome_mids.bed")
         wigNucleosomeMidsFilePath = os.path.join(os.path.dirname(bedFilePath), basename+"_nucleosome_mids.wig")
         wigLikeNucleosomeMidsFilePath = os.path.join(os.path.dirname(bedFilePath), basename+"_wig-like_nucleosome_mids.bed")
 
-        
         # Get the nucleosome mid points (estimated) from the paired end reads.
         print("Retrieving midpoints from paired reads...")
         with open(bedFilePath, 'r') as bedFile:
@@ -49,7 +52,7 @@ def bedMNasePEToNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outp
 
                     bedNucleosomeMidsFile.write('\t'.join((splitLine[0], str(midpointStart), str(midpointEnd),
                                                            '.', splitLine[4], '.')) + '\n')
-        
+
         # Sort the nucleosome mids bed file in place.
         print("Sorting midpoints...")
         subprocess.check_call(("sort","-k1,1","-k2,2n", "-k3,3n", "-s", "-o", bedNucleosomeMidsFilePath, bedNucleosomeMidsFilePath))
@@ -149,12 +152,12 @@ def main():
     with TkinterDialog(workingDirectory = workingDirectory) as dialog:
         dialog.createMultipleFileSelector("MNase PE Bed Files:", 0, ".bed", ("Bed Files", ".bed"))
         with dialog.createDynamicSelector(1, 0) as outputFormatDynSel:
-            outputFormatDynSel.initDropdownController("Output format:", (FIXED_STEP_WIG, WIG_LIKE_BED))
+            outputFormatDynSel.initDropdownController("Output format:", (SIMPLE_BED, FIXED_STEP_WIG, WIG_LIKE_BED))
             outputFormatDynSel.initDisplay(FIXED_STEP_WIG, FIXED_STEP_WIG).createFileSelector(
                 "chrom.sizes File:", 0, ("chrom.sizes File", ".chrom.sizes")
             )
 
-    if outputFormatDynSel.getControllerVar() == WIG_LIKE_BED: chromSizesFilePath = None
+    if outputFormatDynSel.getControllerVar() != FIXED_STEP_WIG: chromSizesFilePath = None
     else: chromSizesFilePath = dialog.selections.getIndividualFilePaths(FIXED_STEP_WIG)[0]
     bedMNasePEToNucleosomeMids(dialog.selections.getFilePathGroups()[0],
                                   chromSizesFilePath, outputFormatDynSel.getControllerVar())
