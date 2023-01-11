@@ -1,0 +1,57 @@
+---
+title: "1.10.23 periodicity data"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(mutperiodR)
+bioinformaticsDirectory = choose.dir(caption = "Select Bioinformatics_Projects Directory")
+dataDir = file.path(bioinformaticsDirectory, "project_protista", "R", "data", "1.10.23_wyrick")
+
+rotationalCheckData = fread(file.path(dataDir, "rotational_check.tsv"))
+translationalCheckData = fread(file.path(dataDir, "translational_check.tsv"))
+```
+
+
+```{r}
+getPeakPeriodicityAndSNR(rotationalCheckData$Fig_2A_Both_strands, 5, 25)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rotationalCheckData$Fig_2B_Both_strands, 5, 25)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rotationalCheckData$Fig_S6B_Both_strands, 5, 25)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rotationalCheckData$Fig_S7C_Both_strands, 5, 25)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(rotationalCheckData$Fig_3B_Both_strands, 5, 25)
+```
+
+
+
+```{r}
+getPeakPeriodicityAndSNR(translationalCheckData$Fig_2E_Both_Strands, 50, 250)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(translationalCheckData$Fig_2F_Both_Strands, 50, 250)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(translationalCheckData$Fig_S6D_Both_Strands, 50, 250)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(translationalCheckData$Fig_S7F_Both_Strands, 50, 250)
+```
+
+```{r}
+getPeakPeriodicityAndSNR(translationalCheckData$Fig_3E_Both_Strands, 50, 250)
+```
