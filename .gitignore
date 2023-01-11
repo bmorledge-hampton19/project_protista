@@ -166,6 +166,7 @@ docs/
 ##### My Ignores #####
 # Data files
 **/data/
+**/data_DEPRECATED/
 
 # VSC workspace files
 .vscode/
