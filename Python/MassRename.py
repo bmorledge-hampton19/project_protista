@@ -9,7 +9,7 @@ from mutperiodpy.helper_scripts.UsefulFileSystemFunctions import getDataDirector
 
 def massRename(parentDirectory, searchString: str, replaceString: str, verbose = False):
 
-    assert searchString and replaceString, "Search and replace strings cannot be empty."
+    assert searchString, "Search string cannot be empty."
 
     # Iterate through the given directory
     for item in os.listdir(parentDirectory):
