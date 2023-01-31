@@ -16,7 +16,7 @@ def curateFastaFiles(fastaFilePaths: List[str], minLength = 3):
         with open(inputFastaFilePath, 'r') as inputFastaFile:
             with open(outputFastaFilePath, 'w') as outputFastaFile:
                 observedEntries = set()
-                for fastaEntry in FastaFileIterator(inputFastaFile):
+                for fastaEntry in FastaFileIterator(inputFastaFile, False):
 
                     # Check for duplicate entries.
                     if fastaEntry.sequenceName in observedEntries:
