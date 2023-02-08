@@ -50,6 +50,8 @@ def bedMNasePEToNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outp
                         midpointEnd = int(splitLine[2]) - 73
                         midpointStart = midpointEnd - 1
 
+                    if midpointStart < 73: continue
+
                     bedNucleosomeMidsFile.write('\t'.join((splitLine[0], str(midpointStart), str(midpointEnd),
                                                            '.', splitLine[4], '.')) + '\n')
 
