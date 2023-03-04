@@ -11,6 +11,7 @@ from benbiohelpers.FileSystemHandling.DirectoryHandling import checkDirs
 SIMPLE_BED = "Simple bed"
 FIXED_STEP_WIG = "Fixed-step wig"
 WIG_LIKE_BED = "Wig-like bed"
+STRANDED_WIG_LIKE_BED = "Stranded wig-like bed"
 
 # Given a list of bed files with paired entries, convert each to a fixed step wig file containing
 # counts for nucleosome midpoints. Note that this requires a chrom.sizes file as well.
@@ -23,7 +24,7 @@ def bedMNasePEToNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outp
 
     for bedFilePath in bedFilePaths:
 
-        print(f"Working with {os.path.basename(bedFilePath)}")
+        print(f"\nWorking with {os.path.basename(bedFilePath)}")
 
         # Create paths to output files.
         tempDir = os.path.join(os.path.dirname(bedFilePath), ".tmp")
@@ -35,6 +36,7 @@ def bedMNasePEToNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outp
             bedNucleosomeMidsFilePath = os.path.join(tempDir, basename+"_nucleosome_mids.bed")
         wigNucleosomeMidsFilePath = os.path.join(os.path.dirname(bedFilePath), basename+"_nucleosome_mids.wig")
         wigLikeNucleosomeMidsFilePath = os.path.join(os.path.dirname(bedFilePath), basename+"_wig-like_nucleosome_mids.bed")
+        strandedWigLikeNucleosomeMidsFilePath = os.path.join(os.path.dirname(bedFilePath), basename+"_wig-like_nucleosome_mids_stranded.bed")
 
         # Get the nucleosome mid points (estimated) from the paired end reads.
         print("Retrieving midpoints from paired reads...")
@@ -53,11 +55,11 @@ def bedMNasePEToNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outp
                     if midpointStart < 73: continue
 
                     bedNucleosomeMidsFile.write('\t'.join((splitLine[0], str(midpointStart), str(midpointEnd),
-                                                           '.', splitLine[4], '.')) + '\n')
+                                                           '.', splitLine[4], splitLine[5])) + '\n')
 
         # Sort the nucleosome mids bed file in place.
         print("Sorting midpoints...")
-        subprocess.check_call(("sort","-k1,1","-k2,2n", "-k3,3n", "-s", "-o", bedNucleosomeMidsFilePath, bedNucleosomeMidsFilePath))
+        subprocess.check_call(("sort","-k1,1","-k2,2n", "-k6,6", "-s", "-o", bedNucleosomeMidsFilePath, bedNucleosomeMidsFilePath))
 
         # If "Fixed-step wig" output was selected, convert the file to a fixed step (1) wig file using the chrom.sizes dictionary.
         if outputFormat == FIXED_STEP_WIG:
@@ -139,6 +141,33 @@ def bedMNasePEToNucleosomeMids(bedFilePaths: List[str], chromSizesFilePath, outp
                         
             nucleosomeMidsOutputFilePaths.append(wigLikeNucleosomeMidsFilePath)
 
+        # If "Stranded wig-like bed" output was selected, count/merge bed entries to create the wig-like bed output preserving strand information.
+        elif outputFormat == STRANDED_WIG_LIKE_BED:
+
+            print("Converting to wig-like bed file with strand information...")
+            with open(bedNucleosomeMidsFilePath, 'r') as bedNucleosomeMidsFile:
+                with open(strandedWigLikeNucleosomeMidsFilePath, 'w') as strandedWigLikeNucleosomeMidsFile:
+
+                    lastEntry = None
+                    currentCount = 0
+                    for line in bedNucleosomeMidsFile:
+                        splitLine = line.strip().split('\t')
+
+                        # Compare this entry with the last. If it matches, just iterate the count.
+                        # If it doesn't, write the last Entry and its count and reset both.
+                        if lastEntry is not None and lastEntry[:2] + [lastEntry[5]] == splitLine[:2] + [splitLine[5]]: currentCount += 1
+                        else:
+                            if lastEntry is not None:
+                                strandedWigLikeNucleosomeMidsFile.write('\t'.join(lastEntry[:3] + [str(currentCount), '.', lastEntry[5]]) + '\n')
+                            lastEntry = splitLine
+                            currentCount = 1
+                    
+                    # Make sure to finish the current entry after iterating through the bed file.
+                    if lastEntry is not None:
+                        strandedWigLikeNucleosomeMidsFile.write('\t'.join(lastEntry[:3] + [str(currentCount), '.', lastEntry[5]]) + '\n')
+                        
+            nucleosomeMidsOutputFilePaths.append(wigLikeNucleosomeMidsFilePath)
+
 
     return nucleosomeMidsOutputFilePaths
 
@@ -154,7 +183,7 @@ def main():
     with TkinterDialog(workingDirectory = workingDirectory) as dialog:
         dialog.createMultipleFileSelector("MNase PE Bed Files:", 0, ".bed", ("Bed Files", ".bed"))
         with dialog.createDynamicSelector(1, 0) as outputFormatDynSel:
-            outputFormatDynSel.initDropdownController("Output format:", (SIMPLE_BED, FIXED_STEP_WIG, WIG_LIKE_BED))
+            outputFormatDynSel.initDropdownController("Output format:", (SIMPLE_BED, FIXED_STEP_WIG, WIG_LIKE_BED, STRANDED_WIG_LIKE_BED))
             outputFormatDynSel.initDisplay(FIXED_STEP_WIG, FIXED_STEP_WIG).createFileSelector(
                 "chrom.sizes File:", 0, ("chrom.sizes File", ".chrom.sizes")
             )
