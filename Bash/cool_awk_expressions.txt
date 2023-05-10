@@ -1,8 +1,16 @@
+### AWK is like the overly literal genie who grants three wishes
+
 # Gets the unique lines from the first column, sorted.
 awk '{print $1}' input_file | sort | uniq
 
 # Filters lines based on specific fields, then prints those fields.
 awk '$3 == "DEL/ITX" && $4 > 2 {print $3" "$4}' input_file
+
+# Lots of cool stuff here too!
+#   - Use line number in output
+#   - Modifies columns before re-printing the line
+#   - Custom separator in output
+awk '{OFS = "\t"; $2=$2+NR; $3=$3+NR; print $0}' input_file
 
 # Lots to unpack here:
 #   - Use of conditional statement to output to multiple files.
