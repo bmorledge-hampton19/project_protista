@@ -22,11 +22,26 @@ def findCommonLoci(fullAnnotationFilePaths: List[str], outputFilePath: str):
         with open(fullAnnotationFilePath, 'r') as fullAnnotationFile:
             for line in fullAnnotationFile:
                 splitLine = line.strip().split('\t')
-                locus = splitLine[8]
-                if locus not in lociInThisFile:
-                    lociInThisFile.add(locus)
-                    numberOfFilesWithLocus[locus] = numberOfFilesWithLocus.setdefault(locus, 0) + 1
-                    functionByLocus[locus] = splitLine[9]
+                loci = splitLine[8].split('$')
+                functions = splitLine[9].split('$')
+                
+                # NOTE: The following if/assert statements are a band-aid on a larger problem that stems from
+                # duplicate functions being removed to prevent redundancy from isoforms. It SHOULD be fine as long
+                # as there are no peaks that have been annonated with multiple functions as well. In this case,
+                # there is ambiguity that can't be resolved... Hopefully that doesn't happen though!
+                #
+                # Future Ben, if you're reading this because the assert statment tripped, I'm sorry...
+                # Remember that the supplementary info handler that outputs loci and function information
+                # in AnnotatePeaks.py can be changed to preserve duplicates!
+                if len(loci) != len(functions):
+                    assert len(functions) == 1, "Ambiguous functions for multiple loci"
+                    functions*=len(loci)
+
+                for i,locus in enumerate(loci):
+                    if locus not in lociInThisFile:
+                        lociInThisFile.add(locus)
+                        numberOfFilesWithLocus[locus] = numberOfFilesWithLocus.setdefault(locus, 0) + 1
+                        functionByLocus[locus] = functions[i]
 
     print("Writing results...")
     with open(outputFilePath, 'w') as outputFile:
