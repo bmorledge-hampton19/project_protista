@@ -3,6 +3,8 @@
 # Given these inputs, the script determines which peaks are within which genic regions,
 # whether they are in an exon or intron, and what the sequence of the peak is.
 # This information is outputted to a new tsv file.
+# NOTE: Make sure that no '$' characters are present in the gene annotations file. (These are
+# used as separators for peaks that span multiple loci)
 
 import os
 from typing import List
@@ -49,10 +51,10 @@ class GeneDataAnnotator(ThisInThatCounter):
         self.outputDataHandler.addEncompassedFeatureStratifier()
         self.outputDataHandler.addPlaceholderStratifier()
         self.outputDataHandler.addCustomSupplementalInformationHandler(SimpleColumnSupInfoHandler(
-            outputName = "Gene_Locus", relevantData = ENCOMPASSING_DATA, dataCol = 1
+            outputName = "Gene_Locus", relevantData = ENCOMPASSING_DATA, dataCol = 1, separator = '$'
         ))
         self.outputDataHandler.addCustomSupplementalInformationHandler(SimpleColumnSupInfoHandler(
-            outputName = "Gene_Annotation", relevantData = ENCOMPASSING_DATA, dataCol = 9
+            outputName = "Gene_Annotation", relevantData = ENCOMPASSING_DATA, dataCol = 9, separator = '$'
         ))
 
 
