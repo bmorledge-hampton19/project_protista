@@ -9,6 +9,6 @@ awk '$12 == "Low" && $14 == "Low" { printf "chr"$3"\t"$4"\t"$5"\t.\t.\t"; if($6 
     keratinocyte_melanocyte_expression_roadmap_Gencodev10_hg19.txt > low_expressed_melanocyte_genes.bed
 sort -k1,1 -k2,2n -k3,3n low_expressed_melanocyte_genes.bed -s -o low_expressed_melanocyte_genes.bed
 
-awk '{ printf "chr"$3"\t"$4"\t"$5"\t.\t.\t"; if($6 == 1){print "+"} else{print "-"} }' \
+awk 'NR>1 { printf "chr"$3"\t"$4"\t"$5"\t.\t.\t"; if($6 == 1){print "+"} else{print "-"} }' \
     keratinocyte_melanocyte_expression_roadmap_Gencodev10_hg19.txt > hg19_genic_regions.bed
 sort -k1,1 -k2,2n -k3,3n hg19_genic_regions.bed -s -o hg19_genic_regions.bed
