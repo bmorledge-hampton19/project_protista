@@ -40,7 +40,8 @@ def poolCommonLoci(commonLociFilePaths: List[str], outputFilePath: str, minimumR
 
 def main():
 
-    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data")) as dialog:
+    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data"),
+                       title = "Seclip Pool Common Loci") as dialog:
         dialog.createMultipleFileSelector("Common Loci Files:", 0, "common_loci.tsv",
                                           ("tsv Files", ".tsv"))
         dialog.createTextField("Minimum common replicates:", 1, 0, defaultText="3")

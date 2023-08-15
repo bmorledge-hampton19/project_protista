@@ -157,7 +157,8 @@ def annotatePeaks(narrowPeakFilePaths: List[str], annotatedGenesFilePath: str,
 
 def main():
 
-    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data")) as dialog:
+    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data"),
+                       title = "Annotate Seclip Peaks") as dialog:
         dialog.createMultipleFileSelector("Narrow Peaks Files:", 0, ".narrowPeak", ("Narrow Peak Files", ".narrowPeak"))
         dialog.createFileSelector("Gene Annotation File", 1, ("TSV Files", ".tsv"))
         dialog.createFileSelector("Exons File:", 2, ("Bed Files", ".bed"))

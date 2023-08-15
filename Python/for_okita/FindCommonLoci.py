@@ -53,7 +53,8 @@ def findCommonLoci(fullAnnotationFilePaths: List[str], outputFilePath: str):
 
 def main():
 
-    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data")) as dialog:
+    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data"),
+                       title = "Seclip Find Common Loci") as dialog:
         dialog.createMultipleFileSelector("Full annotation Files:", 0, "full_annotation.bed",
                                           ("Bed Files", ".bed"))
         dialog.createFileSelector("Output File:", 1, ("Tab Separated Values File", ".tsv"), newFile=True)

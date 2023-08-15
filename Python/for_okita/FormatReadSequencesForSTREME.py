@@ -37,7 +37,8 @@ def formatReadSequencesForSTREME(fullAnnotationFilePaths: List[str], outputFileP
 
 def main():
 
-    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data")) as dialog:
+    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data"),
+                       title = "Format Read Sequences for STREME") as dialog:
         dialog.createMultipleFileSelector("Full annotation Files:", 0, "full_annotation.bed",
                                           ("Bed Files", ".bed"))
         with dialog.createDynamicSelector(1, 0) as filterDynSel:

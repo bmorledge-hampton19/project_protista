@@ -35,7 +35,8 @@ def curateFastaFiles(fastaFilePaths: List[str], minLength = 3):
 
 def main():
 
-    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data")) as dialog:
+    with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data"),
+                       title = "Curate Seclip Fasta Files") as dialog:
         dialog.createMultipleFileSelector("Fasta Files:", 0, ".fasta", ("Fasta Files", ".fa"))
 
     selections = dialog.selections
