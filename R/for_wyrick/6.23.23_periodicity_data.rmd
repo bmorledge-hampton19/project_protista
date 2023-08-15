@@ -1,0 +1,18 @@
+---
+title: "1.4.23"
+output: html_document
+---
+
+```{r}
+library(data.table)
+library(mutperiodR)
+bioinformaticsDirectory = choose.dir(caption = "Select Bioinformatics_Projects Directory")
+dataDir = file.path(bioinformaticsDirectory, "project_protista", "R", "data", "6.23.23_wyrick")
+translationalData = fread(file.path(dataDir, "rad1_30min.csv"))
+```
+
+
+```{r}
+getPeakPeriodicityAndSNR(translationalData$Rad1_30min, 50, 250)
+```
+
