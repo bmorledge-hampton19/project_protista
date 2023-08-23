@@ -10,7 +10,8 @@ from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
 from benbiohelpers.CustomErrors import checkForNumber
 
 
-def poolCommonLoci(commonLociFilePaths: List[str], outputFilePath: str, minimumReplicates: int):
+def poolCommonLoci(commonLociFilePaths: List[str], outputFilePath: str, minimumReplicates: int,
+                   omitSingleDataSetLoci = False):
 
     dataSetsByLocus = dict()
     functionByLocus = dict()
@@ -35,7 +36,8 @@ def poolCommonLoci(commonLociFilePaths: List[str], outputFilePath: str, minimumR
     print("Writing results...")
     with open(outputFilePath, 'w') as outputFile:
         for locus in sorted(dataSetsByLocus):
-            outputFile.write('\t'.join((locus, functionByLocus[locus], ','.join(dataSetsByLocus[locus]))) + '\n')
+            if not omitSingleDataSetLoci or len(dataSetsByLocus[locus]) > 1:
+                outputFile.write('\t'.join((locus, functionByLocus[locus], ','.join(dataSetsByLocus[locus]))) + '\n')
 
 
 def main():
@@ -46,11 +48,12 @@ def main():
                                           ("tsv Files", ".tsv"))
         dialog.createTextField("Minimum common replicates:", 1, 0, defaultText="3")
         dialog.createFileSelector("Output File:", 2, ("Tab Separated Values File", ".tsv"), newFile=True)
+        dialog.createCheckbox("Omit loci in only 1 data set", 3, 0)
 
     selections = dialog.selections
 
     poolCommonLoci(selections.getFilePathGroups()[0], selections.getIndividualFilePaths()[0],
-                   checkForNumber(selections.getTextEntries()[0], enforceInt=True))
+                   checkForNumber(selections.getTextEntries()[0], enforceInt=True), selections.getToggleStates()[0])
 
 
 if __name__ == "__main__": main()
