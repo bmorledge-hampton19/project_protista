@@ -35,9 +35,15 @@ def poolCommonLoci(commonLociFilePaths: List[str], outputFilePath: str, minimumR
 
     print("Writing results...")
     with open(outputFilePath, 'w') as outputFile:
+
+        outputFile.write('\t'.join(["Locus", "Function"]+dataSetNames) + '\n')
+
         for locus in sorted(dataSetsByLocus):
             if not omitSingleDataSetLoci or len(dataSetsByLocus[locus]) > 1:
-                outputFile.write('\t'.join((locus, functionByLocus[locus], ','.join(dataSetsByLocus[locus]))) + '\n')
+                outputFile.write(locus +'\t' + functionByLocus[locus])
+                for dataSetName in dataSetNames:
+                    outputFile.write('\t' + str(dataSetName in dataSetsByLocus[locus]))
+                outputFile.write('\n')
 
 
 def main():
