@@ -5,29 +5,36 @@
 # in at least 3 replicates.)
 
 import os
-from typing import List
+from typing import List, Dict
 from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
 from benbiohelpers.CustomErrors import checkForNumber
 
-
-def poolCommonLoci(commonLociFilePaths: List[str], outputFilePath: str, minimumReplicates: int,
-                   omitSingleDataSetLoci = False):
+def poolCommonLoci(commonLociFilePaths: List[str], outputFilePath: str, minimumReplicates: int = None,
+                   omitSingleDataSetLoci = False, individualMinimumReplicates: Dict[str,int] = None):
 
     dataSetsByLocus = dict()
     functionByLocus = dict()
+    dataSetNames = list()
 
     for commonLociFilePath in commonLociFilePaths:
+
+        assert minimumReplicates is None or individualMinimumReplicates is None
+
+        if minimumReplicates is not None: thisMinimumReplicates = minimumReplicates
+        elif individualMinimumReplicates is not None: thisMinimumReplicates = individualMinimumReplicates[commonLociFilePath]
+        else: thisMinimumReplicates = 1
 
         if commonLociFilePath.endswith("_common_loci.tsv"):
             dataSetName = os.path.basename(commonLociFilePath).rsplit("_common_loci.tsv",1)[0]
         else: dataSetName = os.path.basename(commonLociFilePath).rsplit('.',1)[0]
+        dataSetNames.append(dataSetName)
 
         print(f"Documenting loci in {dataSetName}...")
 
         with open(commonLociFilePath, 'r') as commonLociFile:
             for line in commonLociFile:
                 locus, function, replicates = line.strip().split('\t')
-                if int(replicates) >= minimumReplicates:
+                if int(replicates) >= thisMinimumReplicates:
                     if locus not in dataSetsByLocus:
                         dataSetsByLocus[locus] = [dataSetName]
                         functionByLocus[locus] = function
