@@ -1,3 +1,4 @@
+# DEPRECATED - The functionality provided by this script is now built into formatReadSequencesForSTREME.py
 # Curates fasta files by removing duplicates and enforcing a minimum bp length on sequences.
 import os
 from typing import List
