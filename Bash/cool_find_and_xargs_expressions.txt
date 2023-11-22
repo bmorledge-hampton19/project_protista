@@ -1,0 +1,5 @@
+# Recursively finds and returns all files ending in .bed
+# The -print0 option separates the resulting files with the null separator, and the -0 option in xargs makes sure it uses that separator.
+# -P sets the maximum number of parallel processes.
+# -I {} defines "{}" as the substitution string. In this case, the same argument is used twice in sort.
+find . -type f -name "*.bed" -print0 | xargs -0 -P 2 -I {} sort -k1,1 -k2,2n -k3,3n -k6,6 -o {} {}
