@@ -1,5 +1,5 @@
 from mutperiodpy.helper_scripts.UsefulFileSystemFunctions import getDataDirectory, getAcceptableChromosomes
-from mutperiodpy.Tkinter_scripts.TkinterDialog import TkinterDialog
+from benbiohelpers.TkWrappers.TkinterDialog import TkinterDialog
 from typing import List
 import os
 
@@ -44,16 +44,10 @@ def removeInvalidChromosomes(inputBedFilePaths: List[str], genomeFilePath, repla
 def main():
 
     #Create the Tkinter UI
-    dialog = TkinterDialog(workingDirectory=getDataDirectory())
-    dialog.createMultipleFileSelector("Bed Files:",0, "from_wig.bed",("Bed Files",".bed"))
-    dialog.createFileSelector("Genome File Path:", 1, ("Fasta File",".fa"))
-    dialog.createCheckbox("Replace Original File", 2, 0)
-
-    # Run the UI
-    dialog.mainloop()
-
-    # If no input was received (i.e. the UI was terminated prematurely), then quit!
-    if dialog.selections is None: quit()
+    with TkinterDialog(workingDirectory=getDataDirectory(), title = "Remove Invalid Chromosomes") as dialog:
+        dialog.createMultipleFileSelector("Bed Files:",0, "from_wig.bed",("Bed Files",".bed"))
+        dialog.createFileSelector("Genome File Path:", 1, ("Fasta File",".fa"))
+        dialog.createCheckbox("Replace Original File", 2, 0)
 
     removeInvalidChromosomes(dialog.selections.getFilePathGroups()[0], dialog.selections.getIndividualFilePaths()[0],
                              dialog.selections.getToggleStates()[0])
