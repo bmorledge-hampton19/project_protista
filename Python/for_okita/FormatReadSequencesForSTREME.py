@@ -13,7 +13,8 @@ from benbiohelpers.CustomErrors import InvalidPathError
 
 def formatReadSequencesForSTREME(fullAnnotationFilePaths: List[str], outputFilePath: str, genomeFastaFilePath: str,
                                  commonLociFilePath = None, minCommonLociFiles = None,
-                                 maxSequenceLength: int = None, minSequenceLength: int = 3):
+                                 maxSequenceLength: int = None, minSequenceLength: int = 3,
+                                 callFromThreePrimeEnd = True, fivePrimeExtension = 0, threePrimeExtension = 0):
 
     if not outputFilePath.endswith(".fa"):
         raise InvalidPathError(outputFilePath, "Given output path does not appear to be a fasta file.")
@@ -44,22 +45,35 @@ def formatReadSequencesForSTREME(fullAnnotationFilePaths: List[str], outputFileP
 
                 for line in fullAnnotationFile:
                     splitLine = line.strip().split('\t')
+                    startPos = int(splitLine[1])
+                    endPos = int(splitLine[2])
+                    strand = splitLine[5]
 
+                    # Format the entry and determine if it is valid based on given parameters.
                     if commonLociFilePath is not None and splitLine[8] not in validLoci: continue
+                    if callFromThreePrimeEnd:
+                        if strand == '+': startPos = endPos-1
+                        elif strand == '-': endPos = startPos+1
+                    if strand == '+':
+                        startPos -= fivePrimeExtension
+                        endPos += threePrimeExtension
+                    elif strand == '-':
+                        startPos -= threePrimeExtension
+                        endPos += fivePrimeExtension
                     if maxSequenceLength is not None or minSequenceLength is not None:
-                        startPos = int(splitLine[1])
-                        endPos = int(splitLine[2])
                         length = endPos-startPos
                         if maxSequenceLength is not None and length > maxSequenceLength: continue
                         if minSequenceLength is not None and length < minSequenceLength:
                             additionalRadius = math.ceil((minSequenceLength - length)/2)
+                            startPos -= additionalRadius
+                            endPos += additionalRadius
                             splitLine[1] = str(startPos-additionalRadius)
                             splitLine[2] = str(endPos+additionalRadius)
-                    position = f"{splitLine[0]}:{splitLine[1]}-{splitLine[2]}"
+                    position = (splitLine[0], startPos, endPos)
                     if position in observedPositions: continue
                     else: observedPositions.add(position)
 
-                    intermediatePositionsFile.write('\t'.join((splitLine[0],splitLine[1],splitLine[2],
+                    intermediatePositionsFile.write('\t'.join((splitLine[0],str(startPos),str(endPos),
                                                                    '.','.',splitLine[5]))+'\n')
                     writtenSequences += 1
 
@@ -72,16 +86,30 @@ def main():
 
     with TkinterDialog(workingDirectory = os.path.join(os.path.dirname(__file__),"..","..","data"),
                        title = "Format Read Sequences for STREME") as dialog:
-        dialog.createMultipleFileSelector("Full annotation Files:", 0, "full_annotation.bed",
+        dialog.createMultipleFileSelector("Full annotation files:", 0, "full_annotation.bed",
                                           ("Bed Files", ".bed"))
-        with dialog.createDynamicSelector(1, 0) as filterDynSel:
+        dialog.createFileSelector("Genome fasta file:", 1, ("Fasta file", ".fa")),
+        dialog.createFileSelector("Output file path:", 2, ("Fasta file", ".fa"), newFile=True)
+        with dialog.createDynamicSelector(3, 0, 2) as filterDynSel:
             filterDynSel.initCheckboxController("Filter on common loci")
             filterDisplay = filterDynSel.initDisplay(True, "filterDisplay")
             filterDisplay.createFileSelector("Common loci file:", 0, ("Tab Separated Values File", ".tsv"))
             filterDisplay.createTextField("Minimum common files:", 2, 0, defaultText="2")
-        dialog.createFileSelector("Output File:", 2, ("Fasta File", ".fa"), newFile=True)
+        dialog.createCheckbox("Call from three prime end:", 4, 0, 1)
+        dialog.createTextField("Five prime extension:", 5, 0, 1, "0", 10)
+        dialog.createTextField("Three prime extension:", 5, 1, 1, "0", 10)
+        with dialog.createDynamicSelector(6, 0, 2) as maxLengthDS:
+            maxLengthDS.initCheckboxController("Enforce max length")
+            maxLengthDS.initDisplay(True, "maxLength", 0, 1).createTextField("Max length:", 0, 0, 2, "50")
+        with dialog.createDynamicSelector(7, 0, 2) as minLengthDS:
+            minLengthDS.initCheckboxController("Enforce min length")
+            minLengthDS.initDisplay(True, "minLength", 0, 1).createTextField("Min length:", 0, 0, 2, "3")
 
     selections = dialog.selections
+
+    fullAnnotationFilePaths = selections.getFilePathGroups()[0]
+    genomeFastaFilePath = selections.getIndividualFilePaths()[0]
+    outputFilePath = selections.getIndividualFilePaths()[1]
 
     if filterDynSel.getControllerVar():
         commonLociFilePath = selections.getIndividualFilePaths("filterDisplay")[0]
@@ -90,9 +118,21 @@ def main():
         commonLociFilePath = None
         minCommonLociFiles = None
 
+    callFromThreePrimeEnd = selections.getToggleStates()[0]
+    fivePrimeExtension = checkForNumber(selections.getTextEntries()[0], True, lambda x: x >= 0)
+    threePrimeExtension = checkForNumber(selections.getTextEntries()[1], True, lambda x: x >= 0)
 
-    formatReadSequencesForSTREME(selections.getFilePathGroups()[0], selections.getIndividualFilePaths()[0],
-                                 commonLociFilePath, minCommonLociFiles)
+    if maxLengthDS.getControllerVar():
+        maxSequenceLength = checkForNumber(selections.getTextEntries("maxLength")[0], True, lambda x: x >= 0)
+    else: maxSequenceLength = None
+    if minLengthDS.getControllerVar():
+        minSequenceLength = checkForNumber(selections.getTextEntries("minLength")[0], True, lambda x: x >= 0)
+    else: minSequenceLength = None
+
+    formatReadSequencesForSTREME(fullAnnotationFilePaths, outputFilePath, genomeFastaFilePath,
+                                 commonLociFilePath, minCommonLociFiles,
+                                 maxSequenceLength, minSequenceLength,
+                                 callFromThreePrimeEnd, fivePrimeExtension, threePrimeExtension)
 
 
 if __name__ == "__main__": main()
