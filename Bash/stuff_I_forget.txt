@@ -1,0 +1,71 @@
+### Debian packaging:
+
+# Add to ~/.bashrc to establish name and email for keys.
+DEBEMAIL="b.morledge-hampton@wsu.edu"
+DEBFULLNAME="Benjamin Morledge-Hampton"
+export DEBEMAIL DEBFULLNAME
+
+# Add to ~/.devscripts to ignore dirname checks:
+export DEVSCRIPTS_CHECK_DIRNAME_LEVEL=0
+
+#Updating changelog:
+dch -i (In main directory for package)
+
+# Uploading packages to my ppa:
+debuild -S -kb.morledge-hampton@wsu.edu
+dput ppa:ben-morledge-hampton/mutperiod [source.changes file; probably two directories up]
+# OR (not really sure what the point of this one is...)
+[python_version] setup.py --command-packages=stdeb.command sdist_dsc --sign-results
+
+# Building CRAN packages for debian
+
+
+# Building and installing package (for testing purposes)
+debuild -i -us -uc -b
+sudo apt install [.deb file; probably two directories up]
+
+
+# Using shtab to autogenerate completion scripts
+# (Don't forget to use the "prog" argument in the ArgumentParser constructor to specify the entry point to generate the completions file for.)
+shtab --shell=bash [python path to function that returns ArgumentParser] | sudo tee /usr/share/bash-completion/completions/[entry point name] >/dev/null
+example: shtab --shell=bash mutperiodpy.Main.getMainParser | sudo tee /usr/share/bash-completion/completions/mutperiod >/dev/null
+# Then, use this to activate the script:
+source /usr/share/bash-completion/completions/[entry point name]
+
+
+
+### Key stuff
+
+# My old public key that was on my previous Ubuntu installation: 3AEC5139E1E2B6B593E9BF0F66E4B8E05AF50A64
+# My current public key: 3093B1FB6BE08166D24EB942E59272C9B0F71D37
+
+# Get key info (for public (first command) and secret keys (second command))
+gpg -k
+gpg -K
+
+# Create new key
+gpg --full-gen-key
+
+# Upload key to ubuntu key server
+gpg --keyserver hkp://keyserver.ubuntu.com:80 --send-keys [key]
+
+
+### Python Stuff
+
+#Using pip with other python versions:
+python[version] -m pip install [module_to_install]
+
+#Pip install editable 
+pip3 install -e ./ (Within package directory.  Otherwise, replace ./ with path to package directory.) 
+
+
+### Misc.
+
+# Building dependency tree
+apt-rdepends
+
+# Pipe both stderr and stdout
+command |& other_command
+
+# Output text to terminal and pipe to another process for writing after modifications
+command | tee /dev/stderr | other_command
