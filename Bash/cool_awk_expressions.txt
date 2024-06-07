@@ -12,6 +12,10 @@ awk '$3 == "DEL/ITX" && $4 > 2 {print $3" "$4}' input_file
 #   - Custom separator in output
 awk '{OFS = "\t"; $2=$2+NR; $3=$3+NR; print $0}' input_file
 
+# Reduce a column to a single character (the second character).
+awk '{OFS = "\t"; $4=substr($4,2,1); print $0}' input_file
+
+
 # Lots to unpack here:
 #   - Use of conditional statement to output to multiple files.
 #   - $0 prints the ENTIRE line.
